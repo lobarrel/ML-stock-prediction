@@ -17,24 +17,27 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 stock_data = pd.read_csv('./AAPL.csv', index_col='Date')
 
-plt.figure(figsize=(13,8))
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=60))
-x_dates = [dt.datetime.strptime(d,'%Y-%m-%d').date() for d in stock_data.index.values]
+# plt.figure(figsize=(13,8))
+# plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+# plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=60))
+# x_dates = [dt.datetime.strptime(d,'%Y-%m-%d').date() for d in stock_data.index.values]
 
-plt.plot(x_dates, stock_data['High'], label='High')
-plt.plot(x_dates, stock_data['Low'], label='Low')
-plt.legend()
-plt.gcf().autofmt_xdate()
+# plt.plot(x_dates, stock_data['High'], label='High')
+# plt.plot(x_dates, stock_data['Low'], label='Low')
+# plt.legend()
+# plt.gcf().autofmt_xdate()
 #plt.show()
 
-target_y = stock_data['Close']
+y_target = stock_data['Close']
 x_feat = stock_data.iloc[:,0:3]
+stock_data_ft = pd.concat([x_feat, y_target], axis=1)
+print(stock_data_ft)
 
 #Feature Scaling
 sc = StandardScaler()
-x_ft = sc.fit_transform(x_feat.values)
-x_ft = pd.DataFrame(columns=x_feat.columns, data=x_ft, index=x_feat.index)
+data_sc = sc.fit_transform(stock_data_ft)
+data_sc = pd.DataFrame(columns=stock_data_ft.columns, data=data_sc, index=stock_data_ft.index)
+print(data_sc)
 
 #Data Split
 def lstm_split(data, n_steps):
@@ -45,14 +48,16 @@ def lstm_split(data, n_steps):
     return np.array(x), np.array(y)
 
 #Train and Test
-x1, y1 = lstm_split(x_ft.values, n_steps=2)
+x1, y1 = lstm_split(data_sc.values, n_steps=2)
+print(x1)
+print(y1)
 train_split = 0.8
 split_idx = int(np.ceil(len(x1)*train_split))
-date_index = x_ft.index
+date_index = data_sc.index
 
 x_train, x_test = x1[:split_idx], x1[split_idx:]
 y_train, y_test = y1[:split_idx], y1[split_idx:]
-x_train_date, x_test_date = date_index[:split_idx], date_index[split_idx:]
+x_train_date, x_test_date = date_index[:split_idx+1], date_index[split_idx+1:]
 print(x1.shape, x_train.shape, x_test.shape, y_test.shape)
 
 #Build LSTM Model
