@@ -72,5 +72,22 @@ mape = mean_absolute_percentage_error(y_test, y_pred)
 print("RMSE: ", rmse)
 print("MAPE: ", mape)
 
-plt.plot(x_dates, y_pred)
+# Assuming you have y_pred (predicted stock prices) from your LSTM model
+plt.figure(figsize=(10, 6))  # Adjust the figure size as needed
+
+# Plot true stock values (y_test) in blue
+plt.plot(x_test_date, y_test, label='True Values', color='blue')
+
+# Plot predicted stock values (y_pred) in red
+plt.plot(x_test_date, y_pred, label='Predictions', color='red')
+
+# Add labels and title
+plt.xlabel('Date', fontsize=15)
+plt.ylabel('Stock Price', fontsize=15)
+plt.title('True vs. Predicted Stock Prices', fontsize=18)
+
+# Add legend
+plt.legend()
+
+# Show the plot
 plt.show()
