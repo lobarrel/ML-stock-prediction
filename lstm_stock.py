@@ -9,24 +9,12 @@ from keras.layers import LSTM
 from keras.layers import Dropout
 from keras.layers import *
 from keras.callbacks import EarlyStopping
-
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_percentage_error
 
 
 stock_data = pd.read_csv('./AAPL.csv', index_col='Date')
-
-# plt.figure(figsize=(13,8))
-# plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-# plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=60))
-# x_dates = [dt.datetime.strptime(d,'%Y-%m-%d').date() for d in stock_data.index.values]
-
-# plt.plot(x_dates, stock_data['High'], label='High')
-# plt.plot(x_dates, stock_data['Low'], label='Low')
-# plt.legend()
-# plt.gcf().autofmt_xdate()
-#plt.show()
 
 y_target = stock_data['Close']
 x_feat = stock_data.iloc[:,0:3]
@@ -38,6 +26,41 @@ sc = StandardScaler()
 data_sc = sc.fit_transform(stock_data_ft)
 data_sc = pd.DataFrame(columns=stock_data_ft.columns, data=data_sc, index=stock_data_ft.index)
 print(data_sc)
+
+
+#Simple Moving Average
+train_split = 0.8
+split_idx = int(np.ceil(len(stock_data)*train_split))
+train = stock_data[['Close']].iloc[:split_idx]
+test = stock_data[['Close']].iloc[split_idx:]
+sma_50 = stock_data[['Close']].rolling(50).mean().iloc[split_idx:]
+sma_200 = stock_data[['Close']].rolling(200).mean().iloc[split_idx:]
+
+rmse = mean_squared_error(test, sma_50, squared=False)
+mape = mean_absolute_percentage_error(test, sma_50)
+print('SMA_50 RMSE: ', rmse)
+print('SMA_50 MAPE: ', mape)
+
+rmse = mean_squared_error(test, sma_200, squared=False)
+mape = mean_absolute_percentage_error(test, sma_200)
+print('SMA_200 RMSE: ', rmse)
+print('SMA_200 MAPE: ', mape)
+
+plt.figure(figsize=(10, 5))
+plt.plot(stock_data['Close'])
+plt.plot(sma_50)
+plt.plot(sma_200)
+plt.show()
+
+
+
+
+
+
+
+
+
+
 
 #Data Split
 def lstm_split(data, n_steps):
@@ -74,25 +97,21 @@ y_pred = lstm.predict(x_test)
 
 rmse = mean_squared_error(y_test, y_pred, squared=False)
 mape = mean_absolute_percentage_error(y_test, y_pred)
-print("RMSE: ", rmse)
-print("MAPE: ", mape)
+print('LSTM RMSE: ', rmse)
+print('LSTM MAPE: ', mape)
 
-# Assuming you have y_pred (predicted stock prices) from your LSTM model
-plt.figure(figsize=(10, 6))  # Adjust the figure size as needed
 
+plt.figure(figsize=(10, 5))
 # Plot true stock values (y_test) in blue
 plt.plot(x_test_date, y_test, label='True Values', color='blue')
-
 # Plot predicted stock values (y_pred) in red
 plt.plot(x_test_date, y_pred, label='Predictions', color='red')
-
 # Add labels and title
 plt.xlabel('Date', fontsize=15)
 plt.ylabel('Stock Price', fontsize=15)
 plt.title('True vs. Predicted Stock Prices', fontsize=18)
-
 # Add legend
 plt.legend()
-
 # Show the plot
 plt.show()
+
