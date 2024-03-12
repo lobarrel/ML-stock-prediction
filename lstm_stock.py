@@ -12,9 +12,21 @@ from keras.callbacks import EarlyStopping
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_percentage_error
+import yfinance as yf
+import logging
+import sys
+
+stock_ticker = sys.argv[1]
+start_date = sys.argv[2]
+end_date = sys.argv[3]
+
+logging.basicConfig(filename="std.log", format='%(message)s', filemode='w') 
+logger=logging.getLogger() 
+logger.setLevel(logging.DEBUG) 
+logger.debug("LSTM Stock Prediction Tool\nRESULTS\n") 
 
 
-stock_data = pd.read_csv('./AAPL.csv', index_col='Date')
+stock_data = yf.download(tickers=stock_ticker, start=start_date, end=end_date)
 stock_data = stock_data.iloc[:,0:4]
 
 #Feature Scaling
