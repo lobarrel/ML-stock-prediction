@@ -15,52 +15,12 @@ from sklearn.metrics import mean_absolute_percentage_error
 
 
 stock_data = pd.read_csv('./AAPL.csv', index_col='Date')
-
-y_target = stock_data['Close']
-x_feat = stock_data.iloc[:,0:3]
-stock_data_ft = pd.concat([x_feat, y_target], axis=1)
-print(stock_data_ft)
+stock_data = stock_data.iloc[:,0:4]
 
 #Feature Scaling
-sc = StandardScaler()
-data_sc = sc.fit_transform(stock_data_ft)
-data_sc = pd.DataFrame(columns=stock_data_ft.columns, data=data_sc, index=stock_data_ft.index)
-print(data_sc)
-
-
-#Simple Moving Average
-train_split = 0.8
-split_idx = int(np.ceil(len(stock_data)*train_split))
-train = stock_data[['Close']].iloc[:split_idx]
-test = stock_data[['Close']].iloc[split_idx:]
-sma_50 = stock_data[['Close']].rolling(50).mean().iloc[split_idx:]
-sma_200 = stock_data[['Close']].rolling(200).mean().iloc[split_idx:]
-
-rmse = mean_squared_error(test, sma_50, squared=False)
-mape = mean_absolute_percentage_error(test, sma_50)
-print('SMA_50 RMSE: ', rmse)
-print('SMA_50 MAPE: ', mape)
-
-rmse = mean_squared_error(test, sma_200, squared=False)
-mape = mean_absolute_percentage_error(test, sma_200)
-print('SMA_200 RMSE: ', rmse)
-print('SMA_200 MAPE: ', mape)
-
-plt.figure(figsize=(10, 5))
-plt.plot(stock_data['Close'])
-plt.plot(sma_50)
-plt.plot(sma_200)
-plt.show()
-
-
-
-
-
-
-
-
-
-
+scaler = StandardScaler()
+scaled_data = scaler.fit_transform(stock_data)
+scaled_data = pd.DataFrame(columns=stock_data.columns, data=scaled_data, index=stock_data.index)
 
 #Data Split
 def lstm_split(data, n_steps):
@@ -71,17 +31,14 @@ def lstm_split(data, n_steps):
     return np.array(x), np.array(y)
 
 #Train and Test
-x1, y1 = lstm_split(data_sc.values, n_steps=2)
-print(x1)
-print(y1)
+x1, y1 = lstm_split(scaled_data.values, n_steps=2)
 train_split = 0.8
 split_idx = int(np.ceil(len(x1)*train_split))
-date_index = data_sc.index
+date_index = scaled_data.index
 
 x_train, x_test = x1[:split_idx], x1[split_idx:]
 y_train, y_test = y1[:split_idx], y1[split_idx:]
 x_train_date, x_test_date = date_index[:split_idx+1], date_index[split_idx+1:]
-print(x1.shape, x_train.shape, x_test.shape, y_test.shape)
 
 #Build LSTM Model
 lstm = Sequential()
@@ -100,18 +57,34 @@ mape = mean_absolute_percentage_error(y_test, y_pred)
 print('LSTM RMSE: ', rmse)
 print('LSTM MAPE: ', mape)
 
+#Simple Moving Average
+train_split = 0.8
+split_idx = int(np.ceil(len(scaled_data)*train_split))
+test = scaled_data[['Close']].iloc[split_idx:]
+sma_50 = scaled_data[['Close']].rolling(50).mean().iloc[split_idx:]
+sma_200 = scaled_data[['Close']].rolling(200).mean().iloc[split_idx:]
 
+rmse = mean_squared_error(test, sma_50, squared=False)
+mape = mean_absolute_percentage_error(test, sma_50)
+print('SMA_50 RMSE: ', rmse)
+print('SMA_50 MAPE: ', mape)
+
+rmse = mean_squared_error(test, sma_200, squared=False)
+mape = mean_absolute_percentage_error(test, sma_200)
+print('SMA_200 RMSE: ', rmse)
+print('SMA_200 MAPE: ', mape)
+
+#Plot Results
 plt.figure(figsize=(10, 5))
-# Plot true stock values (y_test) in blue
 plt.plot(x_test_date, y_test, label='True Values', color='blue')
-# Plot predicted stock values (y_pred) in red
 plt.plot(x_test_date, y_pred, label='Predictions', color='red')
+plt.plot(sma_50, label='SMA 50')
+plt.plot(sma_200, label='SMA 200')
 # Add labels and title
 plt.xlabel('Date', fontsize=15)
 plt.ylabel('Stock Price', fontsize=15)
 plt.title('True vs. Predicted Stock Prices', fontsize=18)
 # Add legend
 plt.legend()
-# Show the plot
 plt.show()
 
