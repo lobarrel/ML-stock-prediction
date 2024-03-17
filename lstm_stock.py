@@ -22,12 +22,13 @@ end_date = sys.argv[3]
 
 logging.basicConfig(filename="std.log", format='%(message)s', filemode='w') 
 logger=logging.getLogger() 
-logger.setLevel(logging.DEBUG) 
-logger.debug("LSTM Stock Prediction Tool\nRESULTS\n") 
-
+logger.setLevel(logging.INFO) 
+logger.info("LSTM Stock Prediction Tool\n\n") 
 
 stock_data = yf.download(tickers=stock_ticker, start=start_date, end=end_date)
 stock_data = stock_data.iloc[:,0:4]
+logger.info('Stock Data for %s from %s to %s\n', stock_ticker, start_date, end_date)
+logger.info('{}\n\n'.format(stock_data))
 
 #Feature Scaling
 scaler = StandardScaler()
@@ -66,8 +67,11 @@ y_pred = lstm.predict(x_test)
 
 rmse = mean_squared_error(y_test, y_pred, squared=False)
 mape = mean_absolute_percentage_error(y_test, y_pred)
-print('LSTM RMSE: ', rmse)
-print('LSTM MAPE: ', mape)
+logger.info('RESULTS\n')
+logger.info('---------------------------')
+logger.info('| LSTM RMSE: %f', rmse)
+logger.info('| LSTM MAPE: %f', mape)
+logger.info('---------------------------')
 
 #Simple Moving Average
 train_split = 0.8
@@ -78,13 +82,15 @@ sma_200 = scaled_data[['Close']].rolling(200).mean().iloc[split_idx:]
 
 rmse = mean_squared_error(test, sma_50, squared=False)
 mape = mean_absolute_percentage_error(test, sma_50)
-print('SMA_50 RMSE: ', rmse)
-print('SMA_50 MAPE: ', mape)
+logger.info('| SMA_50 RMSE: %f', rmse)
+logger.info('| SMA_50 MAPE: %f', mape)
+logger.info('---------------------------')
 
 rmse = mean_squared_error(test, sma_200, squared=False)
 mape = mean_absolute_percentage_error(test, sma_200)
-print('SMA_200 RMSE: ', rmse)
-print('SMA_200 MAPE: ', mape)
+logger.info('| SMA_200 RMSE: %f', rmse)
+logger.info('| SMA_200 MAPE: %f', mape)
+logger.info('---------------------------')
 
 #Plot Results
 plt.figure(figsize=(10, 5))
